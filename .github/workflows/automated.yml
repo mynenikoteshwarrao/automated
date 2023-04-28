@@ -1,0 +1,42 @@
+name: Create Project, Repository, and Workflow
+on:
+  push:
+    branches: [ main ]
+
+ 
+env:
+  ORG_NAME: myneni
+  PROJECT_NAME: My Project workflow
+  REPO_NAME: newrepofromworlflow
+  BRANCH_NAME: main
+  WORKFLOW_NAME: My Workflow
+  WORKFLOW_FILE: my-workflow.yml
+
+jobs:
+  create-project:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create Project
+      run: |
+        curl -H "Authorization: token ${{ secrets.API_ACCESS1 }}" \
+             -H "Accept: application/vnd.github.inertia-preview+json" \
+             -d '{"name":"'"${PROJECT_NAME}"'", "body": "A new project"}' \
+             https://api.github.com/orgs/${ORG_NAME}/projects
+  create-repo:
+    needs: create-project
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create Repository
+      run: |
+        hub create -d "A new repository" -p ${PROJECT_NAME} ${REPO_NAME}
+  add-workflow:
+    needs: create-repo
+    runs-on: ubuntu-latest
+    steps:
+    - name: Add Workflow
+      run: |
+        curl -X PUT \
+             -H "Authorization: token ${{ secrets.API_ACCESS1 }}" \
+             -H "Accept: application/vnd.github.inertia-preview+json" \
+             -d '{"name":"'"${WORKFLOW_NAME}"'", "path":"'"${WORKFLOW_FILE}"'", "branch":"'"${BRANCH_NAME}"'"}' \
+             https://api.github.com/repos/${REPO_NAME}/contents/${WORKFLOW_FILE}
